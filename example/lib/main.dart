@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:package_replaced/package_replaced.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
-void main(){
+void main() {
   runApp(MyApp());
   PackageReplaced.setHandlerFunction(handlePackageReplaced);
 }
@@ -15,7 +15,7 @@ class MyApp extends StatefulWidget {
   _MyAppState createState() => _MyAppState();
 }
 
-void handlePackageReplaced() async{
+void handlePackageReplaced() async {
   await _incrementReplaceCount();
 }
 
@@ -29,20 +29,20 @@ class _MyAppState extends State<MyApp> {
     _showReplaceCount();
   }
 
-  void _showReplaceCount() async{
+  void _showReplaceCount() async {
     final replaceCount = await _getReplaceCount();
 
-    setState((){
+    setState(() {
       _replaceCount = replaceCount;
     });
   }
 
-  void _artificalIncrement() async{
+  void _artificalIncrement() async {
     await _incrementReplaceCount();
     _showReplaceCount();
   }
 
-  void _artificalReset() async{
+  void _artificalReset() async {
     await _setReplaceCount(0);
     _showReplaceCount();
   }
@@ -51,42 +51,41 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('package_replaced plugin example app'),
-        ),
-        body: Center(
-          child: Column(
-            children: <Widget>[
-              Text('Package replaced $_replaceCount time(s)'),
-              Text(_miscMessage)
-            ],
+          appBar: AppBar(
+            title: const Text('package_replaced plugin example app'),
           ),
-        ),
-        floatingActionButton: Column(
-          children: <Widget>[
-            FloatingActionButton(
-              child:Text("+"),
-              onPressed: _artificalIncrement,
+          body: Center(
+            child: Column(
+              children: <Widget>[
+                Text('Package replaced $_replaceCount time(s)'),
+                Text(_miscMessage)
+              ],
             ),
-            FloatingActionButton(
-              child:Text("0"),
-              onPressed: _artificalReset,
-            ),
-          ],
-
-          mainAxisAlignment: MainAxisAlignment.end,
-        )
-      ),
+          ),
+          floatingActionButton: Column(
+            children: <Widget>[
+              FloatingActionButton(
+                child: Text("+"),
+                onPressed: _artificalIncrement,
+              ),
+              FloatingActionButton(
+                child: Text("0"),
+                onPressed: _artificalReset,
+              ),
+            ],
+            mainAxisAlignment: MainAxisAlignment.end,
+          )),
     );
   }
 }
 
-Future<File> getCountFile() async{
-  final myStorageDirectory = await path_provider.getApplicationDocumentsDirectory();
+Future<File> getCountFile() async {
+  final myStorageDirectory =
+      await path_provider.getApplicationDocumentsDirectory();
 
   var countFilePath = myStorageDirectory.path;
 
-  if(!countFilePath.endsWith("/")){
+  if (!countFilePath.endsWith("/")) {
     countFilePath += "/";
   }
 
@@ -95,15 +94,15 @@ Future<File> getCountFile() async{
   return File(countFilePath);
 }
 
-Future<int> _getReplaceCount() async{
+Future<int> _getReplaceCount() async {
   var retCount = 0;
 
   final countFile = await getCountFile();
 
-  if(await countFile.exists()){
+  if (await countFile.exists()) {
     retCount = int.tryParse((await countFile.readAsString()));
 
-    if(retCount == null){
+    if (retCount == null) {
       retCount = 0;
     }
   }
@@ -111,17 +110,17 @@ Future<int> _getReplaceCount() async{
   return retCount;
 }
 
-Future<void> _setReplaceCount(int newCountValue) async{
+Future<void> _setReplaceCount(int newCountValue) async {
   final countFile = await getCountFile();
 
-  if(!(await countFile.parent.exists())){
+  if (!(await countFile.parent.exists())) {
     await countFile.parent.create(recursive: true);
   }
 
   await countFile.writeAsString(newCountValue.toString());
 }
 
-Future<void> _incrementReplaceCount() async{
+Future<void> _incrementReplaceCount() async {
   final currentReplaceCount = await _getReplaceCount();
-  await _setReplaceCount(currentReplaceCount+1);
+  await _setReplaceCount(currentReplaceCount + 1);
 }
