@@ -20,4 +20,18 @@ class PackageReplaced {
     await _mainChannel.invokeMethod(
         "setHandlerFunctionHandle", <dynamic>[handlerFunctionHandle]);
   }
+
+  ///if you have multiple my_package_replaced receivers
+  ///and want to execute them in a specific order
+  ///you can set deferExecution=true, and then manually call
+  ///PackageReplacedPlugin.handlePackageReplaced when appropriate
+  static Future<void> setDeferHandlerExecution(bool deferExecution) async {
+    bool setValue = deferExecution;
+    if (setValue == null) {
+      setValue = false;
+    }
+
+    await _mainChannel
+        .invokeMethod("setDeferHandlerExecution", <dynamic>[setValue]);
+  }
 }

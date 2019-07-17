@@ -68,6 +68,7 @@ class PackageReplacedPlugin: BroadcastReceiver(), MethodCallHandler {
 
     private const val PREFS_FILE_NAME = "org.thebus.package_replaced.PackageReplacedPlugin"
     private const val PREFS_ITEM_KEY_HANDLER_FUNCTION = "org.thebus.package_replaced.PackageReplacedPlugin.HandlerFunction"
+    private const val PREFS_ITEM_KEY_DEFER_EXECUTION = "org.thebus.package_replaced.PackageReplacedPlugin.DeferExcecution"
 
     private val myPrefs
       get() = myAppContext.getSharedPreferences(PREFS_FILE_NAME, Context.MODE_PRIVATE)
@@ -95,6 +96,23 @@ class PackageReplacedPlugin: BroadcastReceiver(), MethodCallHandler {
         if(value != null) {
           myPrefs.edit().putLong(PREFS_ITEM_KEY_HANDLER_FUNCTION, value).apply()
         }
+      }
+
+    private var deferHandlerExecution: Boolean
+      get() {
+
+        val defaultValue: Boolean = false
+
+        return (
+          try {
+            myPrefs.getBoolean(PREFS_ITEM_KEY_DEFER_EXECUTION, defaultValue)
+          }catch(cce: ClassCastException){
+            defaultValue
+          }
+        )
+      }
+      set(value){
+        myPrefs.edit().putBoolean(PREFS_ITEM_KEY_DEFER_EXECUTION, value).apply()
       }
 
     //do a callback by creating a background isolate with the callback as the entry point
@@ -125,6 +143,30 @@ class PackageReplacedPlugin: BroadcastReceiver(), MethodCallHandler {
                 "Did you call PackageReplacedPlugin.setPluginRegistrantCallback?")
       }
     }
+
+    fun handlePackageReplaced(p0: Context?, p1:Intent?){
+
+      logDebug("package replaced handler executing")
+
+      if(p1?.action == Intent.ACTION_MY_PACKAGE_REPLACED) {
+        if (p0 != null) {
+
+          myApplicationContextRef = SoftReference(p0)
+
+          val myHandlerHandle = handlerFunctionHandle
+          if (myHandlerHandle != null) {
+            doCallback(myAppContext, myHandlerHandle)
+          } else {
+            logDebug("handle was not found; callback will not be done")
+          }
+
+        } else {
+          logError("received context is null")
+        }
+      }else{
+        logError("unexpected intent received: ${p1?.action}")
+      }
+    }
   }
 
   override fun onMethodCall(call: MethodCall, result: Result) {
@@ -136,6 +178,9 @@ class PackageReplacedPlugin: BroadcastReceiver(), MethodCallHandler {
       "setHandlerFunctionHandle" ->
         handlerFunctionHandle = (call.arguments as JSONArray).getLong(0)
 
+      "setDeferHandlerExecution" ->
+        deferHandlerExecution = (call.arguments as JSONArray).getBoolean(0)
+
       else ->{
         result.notImplemented()
       }
@@ -144,20 +189,8 @@ class PackageReplacedPlugin: BroadcastReceiver(), MethodCallHandler {
 
   override fun onReceive(p0: Context?, p1: Intent?) {
     logDebug("package replaced received")
-
-    if(p0 != null) {
-
-      myApplicationContextRef = SoftReference(p0)
-
-      val myHandlerHandle = handlerFunctionHandle
-      if (myHandlerHandle != null) {
-        doCallback(myAppContext, myHandlerHandle)
-      }else{
-        logDebug("handle was not found; callback will not be done")
-      }
-
-    }else{
-      logError("received context is null")
+    if(!deferHandlerExecution) {
+      handlePackageReplaced(p0, p1)
     }
   }
 }
