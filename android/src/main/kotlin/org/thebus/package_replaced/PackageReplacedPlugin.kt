@@ -29,6 +29,9 @@ class PackageReplacedPlugin: BroadcastReceiver(), MethodCallHandler {
       myApplicationContextRef?.get()
               ?: throw Exception("PackageReplacedPlugin application context was null")
     }
+    fun setAppContextRef(appContext: Context){
+      myApplicationContextRef = SoftReference(appContext)
+    }
 
     //these are used to let the service execute dart handles
     private var sBackgroundFlutterViewRef: SoftReference<FlutterNativeView>? = null
@@ -55,7 +58,7 @@ class PackageReplacedPlugin: BroadcastReceiver(), MethodCallHandler {
       channel.setMethodCallHandler(PackageReplacedPlugin())
 
       if(myApplicationContextRef == null){
-        myApplicationContextRef = SoftReference(registrar.context())
+        setAppContextRef(registrar.context().applicationContext)
       }
     }
 
@@ -151,7 +154,7 @@ class PackageReplacedPlugin: BroadcastReceiver(), MethodCallHandler {
       if(p1?.action == Intent.ACTION_MY_PACKAGE_REPLACED) {
         if (p0 != null) {
 
-          myApplicationContextRef = SoftReference(p0)
+          setAppContextRef(p0.applicationContext)
 
           val myHandlerHandle = handlerFunctionHandle
           if (myHandlerHandle != null) {
@@ -189,6 +192,11 @@ class PackageReplacedPlugin: BroadcastReceiver(), MethodCallHandler {
 
   override fun onReceive(p0: Context?, p1: Intent?) {
     logDebug("package replaced received")
+    if(myApplicationContextRef == null){
+      if(p0 != null){
+        setAppContextRef(p0.applicationContext)
+      }
+    }
     if(!deferHandlerExecution) {
       handlePackageReplaced(p0, p1)
     }

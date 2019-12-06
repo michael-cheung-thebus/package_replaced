@@ -1,3 +1,7 @@
+## 1.1.1
+
+Add application context reference in onReceive if it is not already set for some reason
+
 ## 1.1.0
 
 Add function setDeferHandlerExecution
