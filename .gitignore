@@ -10,3 +10,5 @@ build/
 *.lock
 
 ios/
+
+example/.flutter-plugins-dependencies
